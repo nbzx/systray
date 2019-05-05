@@ -98,11 +98,11 @@ type notifyIconData struct {
 	Tip                        [128]uint16
 	State, StateMask           uint32
 	Info                       [256]uint16
-	Timeout, Version           uint32
+	Version           		   uint32
 	InfoTitle                  [64]uint16
 	InfoFlags                  uint32
 	GuidItem                   windows.GUID
-	BalloonIcon                windows.Handle
+	//BalloonIcon                windows.Handle
 }
 
 func (nid *notifyIconData) add() error {
@@ -140,6 +140,16 @@ func (nid *notifyIconData) delete() error {
 	}
 	return nil
 }
+
+func shellNotifyIcon(dwMessage uint32, lpdata *notifyIconData) bool {
+	ret, _, _ := syscall.Syscall(pShellNotifyIcon.Addr(), 2,
+		uintptr(dwMessage),
+		uintptr(unsafe.Pointer(lpdata)),
+		0)
+
+	return ret != 0
+}
+
 
 // Contains information about a menu item.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
@@ -227,6 +237,29 @@ func (t *winTray) setTooltip(src string) error {
 	t.nid.Flags |= NIF_TIP
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
 
+	return t.nid.modify()
+}
+
+
+// Sets message on icon.
+// Shell_NotifyIcon
+func (t *winTray) showMessage(title, message string) error {
+	const NIF_INFO = 0x00000010
+	const NIIF_INFO = 0x00000001
+	const NIM_MODIFY = 0x00000001
+	tit, err := windows.UTF16FromString(title)
+	if err != nil {
+		return err
+	}
+	msg, err := windows.UTF16FromString(message)
+	if err != nil {
+		return err
+	}
+	copy(t.nid.InfoTitle[:], tit[:])
+	copy(t.nid.Info[:], msg[:])
+	t.nid.Flags = NIF_INFO
+	t.nid.InfoFlags = NIIF_INFO
+	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
 	return t.nid.modify()
 }
 
@@ -688,6 +721,15 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 func SetTooltip(tooltip string) {
 	if err := wt.setTooltip(tooltip); err != nil {
 		log.Errorf("Unable to set tooltip: %v", err)
+		return
+	}
+}
+
+// SetTooltip sets the systray tooltip to display on mouse hover of the tray icon,
+// only available on Mac and Windows.
+func ShowMessage(title, mesage string) {
+	if err := wt.showMessage(title, mesage); err != nil {
+		log.Errorf("Unable to show message: %v", err)
 		return
 	}
 }

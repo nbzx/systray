@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"time"
+	//"io/ioutil"
+	//"time"
 
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
@@ -13,8 +13,8 @@ import (
 func main() {
 	onExit := func() {
 		fmt.Println("Starting onExit")
-		now := time.Now()
-		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
+		//now := time.Now()
+		//ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 		fmt.Println("Finished onExit")
 	}
 	// Should be called at the very beginning of main().
@@ -38,6 +38,7 @@ func onReady() {
 		systray.SetIcon(icon.Data)
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
+		systray.ShowMessage("title", "message消息")
 		mChange := systray.AddMenuItem("Change Me", "Change Me")
 		mChecked := systray.AddMenuItem("Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
