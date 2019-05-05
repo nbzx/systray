@@ -97,3 +97,8 @@ func systray_on_exit() {
 func systray_menu_item_selected(cID C.int) {
 	systrayMenuItemSelected(int32(cID))
 }
+
+// 未实现非windows系统的显示消息功能
+func ShowMessage(title, mesage string) {
+	return
+}
